@@ -1,0 +1,53 @@
+Global variables:
+- char board[][]; (3 x 3)
+- int turn = 1; (if 1 => client's turn else server's turn (don't allow client to type)).
+- bool gameFinished = false; (true if one the players wins).
+
+Helper functions:
+
+bool checkValid(int x, int y) {
+
+return (x < n && y < n && board[x][y] == '');
+
+}
+
+checkWinner() {
+Basically find the one of the following patterns:
+--- OR | OR  / OR \
+       |    /      \
+	     |   /        \
+if (patternExists) => gameFinished = true;
+displayWinner(); // We can display winner from the characters that present in the pattern : X or O. We assume the the client is X and server is O.
+disconnect(); // End the connection because someone has won (to keep things simple).
+}
+
+Algorithm:
+Initialize socket (depending on the side, Client or Server).
+We assume the client is the one who starts playing.
+
+do { 
+
+  if(turn) {
+
+    bool valid = false;
+    do {
+      readInput(string coordinates);
+      valid = checkValid(int x, int y);
+    } while(!valid);
+
+    send(string coordinates, int turn = 1); // sending coordinates and the server's turn, i.e. telling the server it is their turn to play.
+    displayBoard();
+    checkWinner();
+}
+
+receive(string coordinates, int turn_client); // same thing from the other side ^.
+print("Server's Move %s", x, y); 
+displayBoard();
+checkWinner();
+turn = turn_client;
+
+} while(!gameFinished);
+
+
+
+
