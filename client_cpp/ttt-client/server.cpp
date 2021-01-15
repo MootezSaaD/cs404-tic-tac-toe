@@ -8,7 +8,7 @@
 
 using namespace std;
 
-#define PORT 8080
+#define PORT 5150
 
 bool gameEnded = false;
 
