@@ -47,7 +47,45 @@ checkWinner();
 turn = turn_client;
 
 } while(!gameFinished);
+---------------------------------------
+Steps:
+1) Client enters their name.
+2) Client sends their name to the server.
+3) Server replies back saying "Hello <CLIENT-NAME>".
+4) Server starts first:
+	4.1) Client is listening (in C++ recv() is first used).
+	4.2) Server sends the first move (in C++ send() is first used).
+	4.3) Before the Server sends its move: the board is updated on the Server side (inluding checks on move validity).
+	4.4) Server's move is sent to the client.
+5) The board is updated at the Client side.
+6) The Client enters their move.
+7) Same steps as server.
+8) Repeat until draw or a party wins.
+---------------------------------------
+Server:                       | Client:
+                              | sendPlayerName();
+listen();                     | while(!gameEnded) {
+                              |    recvServerMove();
+			      |    updateBoard();
+                              |    readMoveFromConsole(); 
+                                   checkValidMove();
+                                   sendMoveToServer();    
+getPlayerName();              |}
+sendHelloMessage();           |
 
+while(!gameEnded) {
+    readMoveFromConsole();
+    checkValidMove();
+    updateBoard();
+    sendMoveToClient();
+    listenToClient();
+    getMoveFromClient();
+    updateBoard();
+}
+
+
+
+}
 
 
 
