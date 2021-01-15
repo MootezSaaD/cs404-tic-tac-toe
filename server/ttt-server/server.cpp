@@ -10,13 +10,20 @@ using namespace std;
 
 #define PORT 8080
 
+bool gameEnded = false;
+
 int main(int argc, char const *argv[])
 {
-    int server_fd, new_socket, valread;
+    int server_fd, new_socket, valread, serverSend, clientReceive;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
+    char serverMove[4096] = {0};
+    char clientMove[4096] = {0};
+
+    // Waiting for a remote player to connect
+    printf("Waiting for a remote player..\n");
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -55,8 +62,7 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    // Waiting for a remote player to connect
-    printf("Waiting for a remote player..\n");
+    // When a the client connects to the server
     char player[4096] = {0};
     int playerConnected = recv(new_socket, player, 4096, 0);
     if (playerConnected > 0)
@@ -65,7 +71,7 @@ int main(int argc, char const *argv[])
     }
     else
     {
-        printf("Something went wrong!\n %d", errno);
+        perror("Something went wrong!\n");
         exit(EXIT_FAILURE);
     }
 
@@ -78,11 +84,53 @@ int main(int argc, char const *argv[])
     }
     else
     {
-        printf("Something went wrong!\n %d", errno);
+        perror("Something went wrong!\n");
         exit(EXIT_FAILURE);
     }
 
     // Start playing
+
+    while (!gameEnded)
+    {
+        // Game ended
+        if (gameEnded)
+            exit(0);
+        // Server starts
+        printf("Enter Your Move: ");
+        cin >> serverMove;
+        // Update board
+        {
+        }
+        serverSend = send(new_socket, serverMove, 4096, 0);
+        if (serverSend != -1)
+        {
+            printf("Move sent\n");
+            printf("Wating for the client's move..\n");
+        }
+        else
+        {
+            printf("Something went wrong! %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+        // Listen to the client's move
+        memset(&clientMove, 0, sizeof(clientMove));
+        clientReceive = recv(new_socket, clientMove, 4096, 0);
+        // Check if the client ended the connection.
+        if (clientReceive == 0)
+        {
+            printf("%s has left.\n", player);
+            exit(0);
+        }
+        if (clientReceive != -1)
+        {
+            printf("[Client's Move]: %s\n", clientMove);
+        }
+        else
+        {
+            perror("Something went wrong!\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
     return 0;
 }
