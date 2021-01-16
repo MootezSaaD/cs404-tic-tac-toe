@@ -3,7 +3,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include "string"
 #include "bits/stdc++.h"
 #include "Board/Board.hpp"
 #define PORT 5150
@@ -32,7 +31,7 @@ int main(int argc, char const *argv[])
     printf("Enter Player Name: ");
     cin >> playerName;
 
-    int sock = 0, valread, sendResult, serverRec, playerSend;
+    int sock = 0, valread, serverRec, playerSend;
 
     struct sockaddr_in serv_addr;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -97,28 +96,42 @@ int main(int argc, char const *argv[])
         }
         if (serverRec != -1)
         {
-            printf("[Server's Move]: %s\n", svMove);
+            printf("[Server's Move]: %c %c\n", svMove[0], svMove[1]);
             // Update the board
-            b->placeSymbol(svMove[0] - '0', svMove[2] - '0', 'X');
+            b->placeSymbol(svMove[0] - '0', svMove[1] - '0', 'X');
             b->displayBoard();
+            b->checkWinner('X');
+            // Check if Server has won
+            if (b->getGameEnded())
+                break;
         }
         else
         {
             printf("Something went wrong! %d\n", errno);
             exit(EXIT_FAILURE);
         }
-        printf("Enter Your Move: ");
-        cin >> *playerMove;
+        char x, y;
+        cout << "Enter Your Move: ";
+        cin >> x >> y;
+        playerMove[0] = x;
+        playerMove[1] = y;
         // Update board
         {
-            while (!b->checkPositionValidity(playerMove[0] - '0', playerMove[2] - '0'))
+            while (!b->checkPositionValidity(playerMove[0] - '0', playerMove[1] - '0'))
             {
-                printf("Wrong move, try again\n");
-                cin >> playerMove;
+                cout << "Invalid Move!\n";
+                cout << "Enter Your Move: ";
+                cin >> x >> y;
+                playerMove[0] = x;
+                playerMove[1] = y;
             }
 
-            b->placeSymbol(playerMove[0] - '0', playerMove[2] - '0', 'O');
+            b->placeSymbol(playerMove[0] - '0', playerMove[1] - '0', 'O');
             b->displayBoard();
+            b->checkWinner('O');
+            // Check if Client has won
+            if (b->getGameEnded())
+                break;
         }
         // Send to server
         playerSend = send(sock, playerMove, 4096, 0);
@@ -134,6 +147,7 @@ int main(int argc, char const *argv[])
     }
 
     // Check if it's a win or a tie
+    b->checkTie();
     if (b->getGameTie())
     {
         printf("It's a Tie.\n");

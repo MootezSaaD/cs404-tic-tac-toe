@@ -8,27 +8,33 @@ Board::Board()
     fill(*board, *board + MAX_ROWS * MAX_COLS, ' ');
 }
 
-void Board::setGameEnded(bool ge) {
+void Board::setGameEnded(bool ge)
+{
     gameEnded = ge;
 }
 
-bool Board::getGameEnded() {
+bool Board::getGameEnded()
+{
     return gameEnded;
 }
 
-void Board::setPlayerWon(int p) {
+void Board::setPlayerWon(int p)
+{
     playerWon = p;
 }
 
-int Board::getPlayerWon() {
+int Board::getPlayerWon()
+{
     return playerWon;
 }
 
-bool Board::getGameTie() {
+bool Board::getGameTie()
+{
     return gameTie;
 }
 
-void Board::setGameTie(bool gt) {
+void Board::setGameTie(bool gt)
+{
     gameTie = gt;
 }
 
@@ -52,7 +58,7 @@ void Board::placeSymbol(int x, int y, char symbol)
     board[x][y] = symbol;
 }
 
-bool Board::checkWinner(char symbol)
+void Board::checkWinner(char symbol)
 {
     bool won = false;
 
@@ -93,9 +99,6 @@ bool Board::checkWinner(char symbol)
         }
         setGameEnded(true);
     }
-
-    
-    return won;
 }
 
 void Board::checkTie()
