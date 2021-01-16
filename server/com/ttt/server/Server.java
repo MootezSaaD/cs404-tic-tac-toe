@@ -1,8 +1,18 @@
 package com.ttt.server;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.Scanner;
 
-public class Play {
+public class Server {
 	
 	public static char [][] board = {{' ',' ',' '}, {' ',' ',' '}, {' ',' ',' '}};
 	public static boolean tieGame = false;
@@ -12,66 +22,86 @@ public class Play {
 
 
 	
-	public static void  main(String[] args){	
+	public static void  main(String[] args) throws IOException{	
+		
+		String ClientPortNumber, ClientIpAddress;
+		//server socket creation
+		ServerSocket serverSock=new ServerSocket(1059);
+		System.out.printf("Waiting for a remote player..\n");
+		//listening client connection and accept the connection
+		Socket socket=serverSock.accept();
+		/*
+		 * Buffering data received from client
+		 */
+		InputStream istream=socket.getInputStream();
+		BufferedReader receiveRead=new BufferedReader(new InputStreamReader(istream));
+		
+		/*
+		 * Streaming data to client
+		 */
+		OutputStream ostream=socket.getOutputStream();
+        PrintWriter pwrite=new PrintWriter(ostream,true);
+		
+		String playerName;
+		if((playerName=receiveRead.readLine())!= null){
+			System.out.printf("%s has connected!\n", playerName);
+		}else {
+			System.out.println("Something went wrong");
+		}		
+		
+		String ackMessage = "Hello" + playerName;
+		pwrite.println(ackMessage);
+		System.out.flush();
+		
 		
 		while(!winner)
 	    {
-	        // If it's player 1's turn
-	        if(turn == 0)
 	        {
-	            // Check if the board has no longer any free places
-	            checkTie();
-	            if(tieGame) break;
-	            int x,y;
+	        	
+	        	//Server's moves
+	            int xServer,yServer;
 	            Scanner scanner = new Scanner(System.in);
-	            System.out.printf("[Player 1]: ");
+	            System.out.printf("Enter your move: ");
 	    		String Coordinates = scanner.next();
+	    		pwrite.println(Coordinates);
 	    		
-	    		 x = Character.getNumericValue(Coordinates.charAt(0));
-	    		 y = Character.getNumericValue(Coordinates.charAt(1));
-	            while(!checkPositionValidity(x,y))
+	    		 xServer = Character.getNumericValue(Coordinates.charAt(0));
+	    		 yServer = Character.getNumericValue(Coordinates.charAt(1));
+	    		 
+	            while(!checkPositionValidity(xServer, yServer))
 	            {
 	            	System.out.printf("Wrong move, try again\n");
 	            	System.out.printf("[Player 1]: ");
 	            	Coordinates = scanner.next();
-		    		x = Character.getNumericValue(Coordinates.charAt(0));
-		    		y = Character.getNumericValue(Coordinates.charAt(1));
+		    		pwrite.println(Coordinates);
+		    		xServer = Character.getNumericValue(Coordinates.charAt(0));
+		    		yServer = Character.getNumericValue(Coordinates.charAt(1));
 	            }
-	            placeSymbol(x, y);
+	            placeSymbol(xServer, yServer);
 	            winner = checkWinner('O');
 	            displayBoard();
-	            turn = 1;
 	            if(winner) break;
 	        }
 
-	        // If it's player 2's turn
-	        if(turn == 1)
-	        {
-	            // Check if the board has no longer any free places
-	            checkTie();
-	            if(tieGame) break;
-	            int x,y;
-	            Scanner scanner1 = new Scanner(System.in);
+	        
+	        //Client's moves
+	            int xClient,yClient;
+	            receiveRead.readLine();
 	            System.out.printf("[Player 2]: ");
-	    		String Coordinates = scanner1.next();
-	    		
-	    		 x = Character.getNumericValue(Coordinates.charAt(0));
-	    		 y = Character.getNumericValue(Coordinates.charAt(1));
-	            while(!checkPositionValidity(x, y))
-	            {
-	            	System.out.printf("Wrong move, try again\n");
-	            	System.out.printf("[Player 2]: ");
-	            	Coordinates = scanner1.next();
-		    		x = Character.getNumericValue(Coordinates.charAt(0));
-		    		y = Character.getNumericValue(Coordinates.charAt(1));
-	            }
-	            placeSymbol(x, y);;
+	    		String coordinates = receiveRead.readLine();
+	    		if((coordinates=receiveRead.readLine())!= null){
+	    			System.out.printf("Player's moves are: %s %s!\n", coordinates.charAt(0), coordinates.charAt(1));
+	    		}else {
+	    			System.out.println("Something went wrong");
+	    		}		
+	    		 xClient = Character.getNumericValue(coordinates.charAt(0));
+	    		 yClient = Character.getNumericValue(coordinates.charAt(1));
+	  
+	            placeSymbol(xClient, yClient);
 	            winner = checkWinner('X');
 	            displayBoard();
-	            turn = 0;
+	            
 	            if(winner) break;
-	        }
-
 	    }
 
 	    if(tieGame)
@@ -81,7 +111,9 @@ public class Play {
 	    else
 	    {
 	        System.out.printf("Player %d has won", playerWon);
-	    }		
+	    }	
+	    pwrite.close();
+		serverSock.close();
 	}
 	
 	
@@ -135,7 +167,6 @@ public class Play {
 	            board[2][0] == symbol)
 	        won = true;
 
-	    
 	   if(won)
 	    {
 	        if(symbol == 'X') {
