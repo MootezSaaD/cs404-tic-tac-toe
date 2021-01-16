@@ -8,7 +8,8 @@ public class Play {
 	public static boolean tieGame = false;
 	public static int turn = 0;
 	public static boolean winner = false;
-	static int playerWon;
+	static int  playerWon = 0;
+
 
 	
 	public static void  main(String[] args){	
@@ -28,7 +29,6 @@ public class Play {
 	    		
 	    		 x = Character.getNumericValue(Coordinates.charAt(0));
 	    		 y = Character.getNumericValue(Coordinates.charAt(1));
-	            //scanf("%d%d", &x, &y);
 	            while(!checkPositionValidity(x,y))
 	            {
 	            	System.out.printf("Wrong move, try again\n");
@@ -51,10 +51,9 @@ public class Play {
 	            checkTie();
 	            if(tieGame) break;
 	            int x,y;
+	            Scanner scanner1 = new Scanner(System.in);
 	            System.out.printf("[Player 2]: ");
-	            Scanner scanner = new Scanner(System.in);
-	            System.out.printf("[Player 1]: ");
-	    		String Coordinates = scanner.next();
+	    		String Coordinates = scanner1.next();
 	    		
 	    		 x = Character.getNumericValue(Coordinates.charAt(0));
 	    		 y = Character.getNumericValue(Coordinates.charAt(1));
@@ -62,7 +61,7 @@ public class Play {
 	            {
 	            	System.out.printf("Wrong move, try again\n");
 	            	System.out.printf("[Player 2]: ");
-	            	Coordinates = scanner.next();
+	            	Coordinates = scanner1.next();
 		    		x = Character.getNumericValue(Coordinates.charAt(0));
 		    		y = Character.getNumericValue(Coordinates.charAt(1));
 	            }
@@ -83,23 +82,8 @@ public class Play {
 	    {
 	        System.out.printf("Player %d has won", playerWon);
 	    }		
-		/*Scanner scanner = new Scanner(System.in);
-		System.out.println("Enter the coordinates of your symbol: ");
-		String Coordinates = scanner.next();
-		
-		int x = Character.getNumericValue(Coordinates.charAt(0));
-		int y = Character.getNumericValue(Coordinates.charAt(1));
-		
-		while (!checkPositionValidity(x, y)) {
-			System.out.println("The coordinates are either taken or incorrect, please retry: ");
-			Coordinates = scanner.next();
-			x = Character.getNumericValue(Coordinates.charAt(0));
-			y = Character.getNumericValue(Coordinates.charAt(1));
-		}
-		placeSymbol(x, y, symbol);
-		displayBoard();
-		scanner.close();*/
 	}
+	
 	
 	public static void displayBoard() {
 		System.out.printf("+-----------------------------+\n");
@@ -125,7 +109,6 @@ public class Play {
 	
 	public static boolean checkWinner(char symbol) {
 		boolean won = false;
-    	int playerWon = 0;
 
 	    // Check rows for winning
 	    for(int i = 0; i < 3; ++i)
@@ -153,7 +136,7 @@ public class Play {
 	        won = true;
 
 	    
-	   /* if(won)
+	   if(won)
 	    {
 	        if(symbol == 'X') {
 	        	playerWon = 2;
@@ -161,7 +144,7 @@ public class Play {
 	        else {
 	        	playerWon = 1;
 	        }
-	    }*/
+	    }
 
 	    return won;		
 	}
