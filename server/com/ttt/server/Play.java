@@ -15,10 +15,19 @@ public class Play {
 		
 		int x = Character.getNumericValue(Coordinates.charAt(0));
 		int y = Character.getNumericValue(Coordinates.charAt(1));
-		System.out.println(y);
+		
+		while (!checkPositionValidity(x, y)) {
+			System.out.println("The coordinates are either taken or incorrect, please retry: ");
+			Coordinates = scanner.next();
+			x = Character.getNumericValue(Coordinates.charAt(0));
+			y = Character.getNumericValue(Coordinates.charAt(1));
+		}
 		placeSymbol(x, y, symbol);
 		displayBoard();
+		scanner.close();
 	}
+	
+	
 	
 	public static boolean checkPositionValidity(int x, int y) {
 		return (x<3 && y<3 && 	board[x][y] == ' ');
