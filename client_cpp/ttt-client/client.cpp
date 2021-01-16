@@ -5,20 +5,29 @@
 #include <unistd.h>
 #include "string"
 #include "bits/stdc++.h"
+#include "Board/Board.hpp"
 #define PORT 5150
 
 using namespace std;
 
+// Global Variables and Constants.
 int turn = 0;
 bool gameEnded = false;
 
 int main(int argc, char const *argv[])
 {
+    // Check if the client has entered the server's IP.
+    if (argc < 2)
+    {
+        printf("Usage: ./client <SERVER-IP>\n");
+        exit(0);
+    }
     string ip = argv[1];
     char playerName[4096] = {0};
     char svMove[4096] = {0};
     char playerMove[4096] = {0};
     char buffer[4096] = {0};
+    Board *b = new Board();
 
     printf("Enter Player Name: ");
     cin >> playerName;
@@ -72,10 +81,10 @@ int main(int argc, char const *argv[])
     // Start playing
     // Server starts first
 
-    while (!gameEnded)
+    while (!b->getGameEnded())
     {
         // Game ended
-        if (gameEnded)
+        if (b->getGameEnded())
             exit(0);
         printf("Waiting for the server's move\n");
         memset(&svMove, 0, sizeof(svMove));
@@ -90,6 +99,8 @@ int main(int argc, char const *argv[])
         {
             printf("[Server's Move]: %s\n", svMove);
             // Update the board
+            b->placeSymbol(svMove[0] - '0', svMove[2] - '0', 'X');
+            b->displayBoard();
         }
         else
         {
@@ -97,9 +108,17 @@ int main(int argc, char const *argv[])
             exit(EXIT_FAILURE);
         }
         printf("Enter Your Move: ");
-        cin >> playerMove;
+        cin >> *playerMove;
         // Update board
         {
+            while (!b->checkPositionValidity(playerMove[0] - '0', playerMove[2] - '0'))
+            {
+                printf("Wrong move, try again\n");
+                cin >> playerMove;
+            }
+
+            b->placeSymbol(playerMove[0] - '0', playerMove[2] - '0', 'O');
+            b->displayBoard();
         }
         // Send to server
         playerSend = send(sock, playerMove, 4096, 0);
@@ -112,6 +131,18 @@ int main(int argc, char const *argv[])
             printf("Something went wrong! %d\n", errno);
             exit(EXIT_FAILURE);
         }
+    }
+
+    // Check if it's a win or a tie
+    if (b->getGameTie())
+    {
+        printf("It's a Tie.\n");
+    }
+    else
+    {
+        int whoWon = b->getPlayerWon();
+        string whoWonStr = (whoWon == 2) ? "Server" : "Client";
+        printf("%s has won!\n", whoWonStr.c_str());
     }
 
     return 0;
