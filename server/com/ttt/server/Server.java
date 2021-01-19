@@ -21,7 +21,6 @@ public class Server {
 	static String  playerWon = "";
     public static String playerName = "";
     public static String coordinates = "";
-
 	
 	public static void  main(String[] args) throws IOException{	
 				
@@ -32,6 +31,10 @@ public class Server {
 		//listening client connection and accept the connection
 		Socket socket=serverSock.accept();
 		
+		//Buffering data received from client
+		InputStream istream=socket.getInputStream();
+		BufferedReader receiveRead=new BufferedReader(new InputStreamReader(istream));
+		
 		//Streaming data to client
 		OutputStream ostream=socket.getOutputStream();
         PrintWriter pwrite=new PrintWriter(ostream,true);
@@ -41,7 +44,8 @@ public class Server {
 
 		
         //Welcome the player
-        byte[] bytes = new byte[1024];
+        byte[] bytes = new byte[20000];
+        byte[] bytes1 = new byte[20000];
         int len;
 
         len = socket.getInputStream().read(bytes);
@@ -83,22 +87,20 @@ public class Server {
 	        //Read client's moves
 	        int xClient,yClient;
 	        System.out.println("Waiting for the client's move\n");
-	        //receiveRead.readLine();
-	        len = socket.getInputStream().read(bytes);
-	        coordinates  = new String(bytes, 0, len);
-	    	//String coordinates = receiveRead.readLine();
-	    	
-
-	        System.out.printf("Player's moves are: %s %s!\n", coordinates.charAt(0), coordinates.charAt(1));
-	    	
-	   		 xClient = Character.getNumericValue(coordinates.charAt(0));
-    		 yClient = Character.getNumericValue(coordinates.charAt(1));
-    		 placeSymbol(xClient, yClient, 'O');
-	         winner = checkWinner('O');
-	         displayBoard();
-	            
-	         if(winner) break;
-	         }
+	        char c;
+	        int len1 = socket.getInputStream().read(bytes1);
+	 	    coordinates  = new String(bytes1, 0, len1);
+			if((xClient = Character.getNumericValue(coordinates.charAt(0)))!=-1 && (yClient = Character.getNumericValue(coordinates.charAt(1)))!=-1) {
+				//System.out.printf("Coordinates are: %s \n", coordinates);
+		 	    System.out.printf("Player's moves are: %s %s\n", coordinates.charAt(0), coordinates.charAt(1));
+		    	yClient = Character.getNumericValue(coordinates.charAt(1));
+		    	placeSymbol(xClient, yClient, 'O');
+			    winner = checkWinner('O');
+			    displayBoard();		
+			}   
+			
+	        if(winner) break;
+	        }
 		scanner.close();
 	    if(tieGame)
 	    {
@@ -131,8 +133,6 @@ public class Server {
 	
 	
 	public static void placeSymbol( int x, int y, char symbol) {
-		System.out.println(x);
-		System.out.println(y);
 		board[x][y] = symbol;
 	}
 	
