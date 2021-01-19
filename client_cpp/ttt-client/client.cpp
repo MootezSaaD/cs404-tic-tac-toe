@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include "bits/stdc++.h"
 #include "Board/Board.hpp"
-#define PORT 5150
+#define PORT 1059
 
 using namespace std;
 

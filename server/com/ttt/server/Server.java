@@ -1,6 +1,8 @@
 package com.ttt.server;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,22 +19,18 @@ public class Server {
 	public static int turn = 0;
 	public static boolean winner = false;
 	static String  playerWon = "";
-
+    public static String playerName = "";
+    public static String coordinates = "";
 
 	
 	public static void  main(String[] args) throws IOException{	
 				
-		System.out.println("hh");
 		//server socket creation
 		ServerSocket serverSock=new ServerSocket(1059);
 		System.out.printf("Waiting for a remote player..\n");
 		
 		//listening client connection and accept the connection
 		Socket socket=serverSock.accept();
-		
-		//Buffering data received from client
-		InputStream istream=socket.getInputStream();
-		BufferedReader receiveRead=new BufferedReader(new InputStreamReader(istream));
 		
 		//Streaming data to client
 		OutputStream ostream=socket.getOutputStream();
@@ -43,15 +41,14 @@ public class Server {
 
 		
         //Welcome the player
-		String playerName;
-		if((playerName=receiveRead.readLine())!= null){
-			System.out.printf("%s has connected!\n", playerName);
-		}else {
-			System.out.println("Something went wrong");
-		}		
+        byte[] bytes = new byte[1024];
+        int len;
+
+        len = socket.getInputStream().read(bytes);
+        playerName  = new String(bytes, 0, len);
 		
 		//Send acknowledgement to the player
-		String ackMessage = "Hello" + playerName;
+		String ackMessage = "Hello " + playerName;
 		pwrite.println(ackMessage);
 		System.out.flush();
 		
@@ -86,14 +83,13 @@ public class Server {
 	        //Read client's moves
 	        int xClient,yClient;
 	        System.out.println("Waiting for the client's move\n");
-	        receiveRead.readLine();
-	    	String coordinates = receiveRead.readLine();
+	        //receiveRead.readLine();
+	        len = socket.getInputStream().read(bytes);
+	        coordinates  = new String(bytes, 0, len);
+	    	//String coordinates = receiveRead.readLine();
 	    	
-	    	if((coordinates=receiveRead.readLine())!= null){
-	    		System.out.printf("Player's moves are: %s %s!\n", coordinates.charAt(0), coordinates.charAt(1));
-	   		}else {
-	   			System.out.println("Something went wrong");
-	   		}		
+
+	        System.out.printf("Player's moves are: %s %s!\n", coordinates.charAt(0), coordinates.charAt(1));
 	    	
 	   		 xClient = Character.getNumericValue(coordinates.charAt(0));
     		 yClient = Character.getNumericValue(coordinates.charAt(1));
@@ -135,6 +131,8 @@ public class Server {
 	
 	
 	public static void placeSymbol( int x, int y, char symbol) {
+		System.out.println(x);
+		System.out.println(y);
 		board[x][y] = symbol;
 	}
 	
