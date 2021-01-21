@@ -31,7 +31,7 @@
         exit(2);                     \
     }
 
-#define PORT 5150
+#define PORT 1059
 
 using namespace std;
 
