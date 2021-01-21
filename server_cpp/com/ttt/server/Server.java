@@ -29,7 +29,8 @@ public class Server {
 		
         int port = 1059;        
         int counter = 0;
-       
+        boolean sent = false;
+        
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("Waiting for client....");
         Socket socket = serverSocket.accept();
@@ -54,58 +55,49 @@ public class Server {
 		pwrite.println(ackMessage);
 		System.out.flush();
 		
-		while(true){
-			
-			if(gameEnded) break;
-			String serverCoordinates, clientCoordinates;
-			int xServer, yServer, xClient, yClient;
-			
-			System.out.println("Enter your move: ");
-			serverCoordinates = scanner.nextLine();
-			xServer = Character.getNumericValue(serverCoordinates.charAt(0));
-	    	yServer = Character.getNumericValue(serverCoordinates.charAt(1));
-	    	
-	    	while(!checkPositionValidity(xServer, yServer)) {
-	    		System.out.println("Invalid Position!");
-	    		System.out.println("Re-enter your move: ");
-	    		serverCoordinates = scanner.nextLine();
-				xServer = Character.getNumericValue(serverCoordinates.charAt(0));
+		while(!gameEnded){
+			//Server enters his moves
+	        int xServer,yServer;
+	        System.out.printf("Enter your move: ");
+	    	String Coordinates = scanner.next();
+	    	xServer = Character.getNumericValue(Coordinates.charAt(0));
+	    	yServer = Character.getNumericValue(Coordinates.charAt(1));
+	    		 
+	    		
+	    	//Check whether the coordinates are valid or not
+	        while(!checkPositionValidity(xServer, yServer)){
+	            System.out.printf("Invalid Move!\n");
+	            System.out.printf("Enter Your Move: ");
+	            serverCoordinates = scanner.next();
+		    	xServer = Character.getNumericValue(serverCoordinates.charAt(0));
 		    	yServer = Character.getNumericValue(serverCoordinates.charAt(1));
-	    	}
-	    	
-	    	//Update Board
-			placeSymbol(xServer, yServer, 'X');
-			displayBoard();
-			checkWinner('X');
-			pwrite.println(serverCoordinates);
-			if (gameEnded) break;
-			
-	
-			char xChar,yChar;
-	        byte[] bytesCoordinates = new byte[4096];
-
-			System.out.println("Waiting for the client's move");
-			len = socket.getInputStream().read(bytesCoordinates);
-			xChar = (char) bytesCoordinates[0];
-			yChar = (char) bytesCoordinates[1];
-			
-			if(xChar!= '\0' && yChar != '\0') {
-				System.out.println(xChar);
-				System.out.println(yChar);
-				
-				clientCoordinates = new String(bytesCoordinates, 0, len);
-				xClient = Character.getNumericValue(xChar);
-		    	yClient = Character.getNumericValue(yChar);
-				
-				System.out.println("Client's moves are: " + xClient + " " + yClient);
-				
-				//Update Board
-				placeSymbol(xClient, yClient, 'O');
-				displayBoard();
-				checkWinner('O');
-				if (gameEnded) break;	
-			}
-		}
+		    	}
+	        
+	        placeSymbol(xServer, yServer, 'X');
+	        winner = checkWinner('X');
+	        displayBoard();
+	        if(winner) break;
+	        
+	        //Send coordinates to the client
+	    	pwrite.println(Coordinates);	
+        
+        //Read client's moves
+        int xClient,yClient;
+        System.out.println("Waiting for the client's move\n");
+        char c;
+        len = socket.getInputStream().read(bytes);
+ 	    clientCoordinates  = new String(bytes, 0, len);
+		if((xClient = Character.getNumericValue(clientCoordinates.charAt(0)))!=-1 && (yClient = Character.getNumericValue(clientCoordinates.charAt(1)))!=-1) {
+			System.out.printf("Coordinates are: %s \n", clientCoordinates);
+	 	    System.out.printf("Player's moves are: %s %s\n", clientCoordinates.charAt(0), clientCoordinates.charAt(1));
+	    	yClient = Character.getNumericValue(clientCoordinates.charAt(1));
+	    	placeSymbol(xClient, yClient, 'O');
+		    winner = checkWinner('O');
+		    displayBoard();
+		}   
+		
+        if(winner) break;
+        }
 		scanner.close();
 		serverSocket.close();
 		
