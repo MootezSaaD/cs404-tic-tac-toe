@@ -12,6 +12,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
+
 public class Server {
 	
 	public static char [][] board = {{' ',' ',' '}, {' ',' ',' '}, {' ',' ',' '}};
@@ -20,23 +24,31 @@ public class Server {
 	public static boolean winner = false;
 	static String  playerWon = "";
     public static String playerName = "";
-    public static String coordinates = "";
-	
-	public static void  main(String[] args) throws IOException{	
-				
-		//server socket creation
-		ServerSocket serverSock=new ServerSocket(1059);
-		System.out.printf("Waiting for a remote player..\n");
+    public static String serverCoordinates = "";
+    public static String clientCoordinates = "";
+
+    
+    public static void  main(String[] args) throws IOException{	
 		
-		//listening client connection and accept the connection
-		Socket socket=serverSock.accept();
+    	boolean gameEnded = false;
+    	 //The Port number through which this server will accept client connections
+        int port = 1059;
+        
+        System.setProperty("javax.net.ssl.keyStore","myKeyStore.jks");
+        System.setProperty("javax.net.ssl.keyStorePassword","98305955Karim");
+        System.setProperty("javax.net.debug","all");
+        
+        SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
+        SSLServerSocket sslServerSocket = (SSLServerSocket)sslServerSocketfactory.createServerSocket(port);
+        System.out.println("Echo Server Started & Ready to accept Client Connection");
+        SSLSocket sslSocket = (SSLSocket)sslServerSocket.accept();
 		
 		//Buffering data received from client
-		InputStream istream=socket.getInputStream();
+		InputStream istream=sslSocket.getInputStream();
 		BufferedReader receiveRead=new BufferedReader(new InputStreamReader(istream));
 		
 		//Streaming data to client
-		OutputStream ostream=socket.getOutputStream();
+		OutputStream ostream=sslSocket.getOutputStream();
         PrintWriter pwrite=new PrintWriter(ostream,true);
         
         //Prepare the scanner for server's input
@@ -44,11 +56,10 @@ public class Server {
 
 		
         //Welcome the player
-        byte[] bytes = new byte[20000];
-        byte[] bytes1 = new byte[20000];
+        byte[] bytes = new byte[4096];
         int len;
 
-        len = socket.getInputStream().read(bytes);
+        len = sslSocket.getInputStream().read(bytes);
         playerName  = new String(bytes, 0, len);
 		
 		//Send acknowledgement to the player
@@ -56,9 +67,7 @@ public class Server {
 		pwrite.println(ackMessage);
 		System.out.flush();
 		
-		while(!winner){
-			
-	        	
+		while(!gameEnded){
 			//Server enters his moves
 	        int xServer,yServer;
 	        System.out.printf("Enter your move: ");
@@ -71,9 +80,9 @@ public class Server {
 	        while(!checkPositionValidity(xServer, yServer)){
 	            System.out.printf("Invalid Move!\n");
 	            System.out.printf("Enter Your Move: ");
-	            Coordinates = scanner.next();
-		    	xServer = Character.getNumericValue(Coordinates.charAt(0));
-		    	yServer = Character.getNumericValue(Coordinates.charAt(1));
+	            serverCoordinates = scanner.next();
+		    	xServer = Character.getNumericValue(serverCoordinates.charAt(0));
+		    	yServer = Character.getNumericValue(serverCoordinates.charAt(1));
 		    	}
 	        
 	        placeSymbol(xServer, yServer, 'X');
@@ -82,36 +91,35 @@ public class Server {
 	        if(winner) break;
 	        
 	        //Send coordinates to the client
-	    	pwrite.println(Coordinates);
-	        
-	        //Read client's moves
-	        int xClient,yClient;
-	        System.out.println("Waiting for the client's move\n");
-	        char c;
-	        int len1 = socket.getInputStream().read(bytes1);
-	 	    coordinates  = new String(bytes1, 0, len1);
-			if((xClient = Character.getNumericValue(coordinates.charAt(0)))!=-1 && (yClient = Character.getNumericValue(coordinates.charAt(1)))!=-1) {
-				//System.out.printf("Coordinates are: %s \n", coordinates);
-		 	    System.out.printf("Player's moves are: %s %s\n", coordinates.charAt(0), coordinates.charAt(1));
-		    	yClient = Character.getNumericValue(coordinates.charAt(1));
-		    	placeSymbol(xClient, yClient, 'O');
-			    winner = checkWinner('O');
-			    displayBoard();		
-			}   
-			
-	        if(winner) break;
-	        }
-		scanner.close();
-	    if(tieGame)
-	    {
-	        System.out.printf("It's a Tie.");
-	    }
-	    else
-	    {
-	        System.out.printf("Player %d has won", playerWon);
-	    }	
-	    pwrite.close();
-		serverSock.close();
+	    	pwrite.println(Coordinates);	
+        
+        //Read client's moves
+        int xClient,yClient;
+        System.out.println("Waiting for the client's move\n");
+        char c;
+        len = sslSocket.getInputStream().read(bytes);
+ 	    clientCoordinates  = new String(bytes, 0, len);
+		if((xClient = Character.getNumericValue(clientCoordinates.charAt(0)))!=-1 && (yClient = Character.getNumericValue(clientCoordinates.charAt(1)))!=-1) {
+			System.out.printf("Coordinates are: %s \n", clientCoordinates);
+	 	    System.out.printf("Player's moves are: %s %s\n", clientCoordinates.charAt(0), clientCoordinates.charAt(1));
+	    	yClient = Character.getNumericValue(clientCoordinates.charAt(1));
+	    	placeSymbol(xClient, yClient, 'O');
+		    winner = checkWinner('O');
+		    displayBoard();
+		}   
+		
+        if(winner) break;
+        }
+	scanner.close();
+    if(tieGame)
+    {
+        System.out.printf("It's a Tie.");
+    }
+    else
+    {
+        System.out.printf("Player % has won", playerWon);
+    }	
+    pwrite.close();
 	}
 	
 	
