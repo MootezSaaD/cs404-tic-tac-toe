@@ -1,8 +1,6 @@
 package com.ttt.server;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,9 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
 
 public class Server {
 	
@@ -34,21 +29,18 @@ public class Server {
     	 //The Port number through which this server will accept client connections
         int port = 1059;
         
-        System.setProperty("javax.net.ssl.keyStore","myKeyStore.jks");
-        System.setProperty("javax.net.ssl.keyStorePassword","98305955Karim");
-        System.setProperty("javax.net.debug","all");
         
-        SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
-        SSLServerSocket sslServerSocket = (SSLServerSocket)sslServerSocketfactory.createServerSocket(port);
-        System.out.println("Echo Server Started & Ready to accept Client Connection");
-        SSLSocket sslSocket = (SSLSocket)sslServerSocket.accept();
+       
+        ServerSocket serverSocket = new ServerSocket(port);
+        System.out.println("Waiting for client....");
+        Socket socket = serverSocket.accept();
 		
 		//Buffering data received from client
-		InputStream istream=sslSocket.getInputStream();
+		InputStream istream=socket.getInputStream();
 		BufferedReader receiveRead=new BufferedReader(new InputStreamReader(istream));
 		
 		//Streaming data to client
-		OutputStream ostream=sslSocket.getOutputStream();
+		OutputStream ostream=socket.getOutputStream();
         PrintWriter pwrite=new PrintWriter(ostream,true);
         
         //Prepare the scanner for server's input
@@ -59,7 +51,7 @@ public class Server {
         byte[] bytes = new byte[4096];
         int len;
 
-        len = sslSocket.getInputStream().read(bytes);
+        len = socket.getInputStream().read(bytes);
         playerName  = new String(bytes, 0, len);
 		
 		//Send acknowledgement to the player
@@ -97,7 +89,7 @@ public class Server {
         int xClient,yClient;
         System.out.println("Waiting for the client's move\n");
         char c;
-        len = sslSocket.getInputStream().read(bytes);
+        len = socket.getInputStream().read(bytes);
  	    clientCoordinates  = new String(bytes, 0, len);
 		if((xClient = Character.getNumericValue(clientCoordinates.charAt(0)))!=-1 && (yClient = Character.getNumericValue(clientCoordinates.charAt(1)))!=-1) {
 			System.out.printf("Coordinates are: %s \n", clientCoordinates);
