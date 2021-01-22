@@ -35,10 +35,6 @@
 
 using namespace std;
 
-// Global Variables and Constants.
-int turn = 0;
-bool gameEnded = false;
-
 int main(int argc, char const *argv[])
 {
     // Check if the client has entered the server's IP.
@@ -201,20 +197,20 @@ int main(int argc, char const *argv[])
             b->displayBoard();
             b->checkWinner('O');
             // Check if Client has won
+            // Send to server
+            //playerSend = send(sock, playerMove, 4096, 0);
+            playerSend = SSL_write(ssl, playerMove, strlen(playerMove));
+            if (playerSend > 0)
+            {
+                printf("Move sent\n");
+            }
+            else
+            {
+                printf("Something went wrong! %d\n", errno);
+                exit(EXIT_FAILURE);
+            }
             if (b->getGameEnded())
                 break;
-        }
-        // Send to server
-        //playerSend = send(sock, playerMove, 4096, 0);
-        playerSend = SSL_write(ssl, playerMove, strlen(playerMove));
-        if (playerSend > 0)
-        {
-            printf("Move sent\n");
-        }
-        else
-        {
-            printf("Something went wrong! %d\n", errno);
-            exit(EXIT_FAILURE);
         }
     }
 
