@@ -113,5 +113,6 @@ void Board::checkTie()
         }
     }
     Board::setGameTie(freePlaces == 0);
-    Board::setGameEnded(freePlaces == 0);
+
+    Board::setGameEnded((Board::getGameEnded() || freePlaces == 0));
 }
