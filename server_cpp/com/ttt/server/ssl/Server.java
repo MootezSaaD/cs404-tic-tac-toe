@@ -1,6 +1,7 @@
 package com.ttt.server.ssl;
 
 import java.io.BufferedReader;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -20,19 +21,20 @@ public class Server {
 	public static boolean winner = false;
 	static String  playerWon = "";
     public static String playerName = "";
-    public static String serverCoordinates = "";
     public static String clientCoordinates = "";
+    static boolean gameEnded = false;
+
 
     
     public static void  main(String[] args) throws IOException{	
 		
-    	boolean gameEnded = false;
     	 //The Port number through which this server will accept client connections
         int port = 1059;
         
         System.setProperty("javax.net.ssl.keyStore","myKeyStore.jks");
         System.setProperty("javax.net.ssl.keyStorePassword","98305955Karim");
-        System.setProperty("javax.net.debug","all");
+        System.setProperty("javax.net.debug","ssl");
+        
         
         SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
         SSLServerSocket sslServerSocket = (SSLServerSocket)sslServerSocketfactory.createServerSocket(port);
@@ -76,18 +78,19 @@ public class Server {
 	        while(!checkPositionValidity(xServer, yServer)){
 	            System.out.printf("Invalid Move!\n");
 	            System.out.printf("Enter Your Move: ");
-	            serverCoordinates = scanner.next();
-		    	xServer = Character.getNumericValue(serverCoordinates.charAt(0));
-		    	yServer = Character.getNumericValue(serverCoordinates.charAt(1));
+	            Coordinates = scanner.next();
+		    	xServer = Character.getNumericValue(Coordinates.charAt(0));
+		    	yServer = Character.getNumericValue(Coordinates.charAt(1));
 		    	}
 	        
 	        placeSymbol(xServer, yServer, 'X');
-	        winner = checkWinner('X');
-	        displayBoard();
-	        if(winner) break;
-	        
+	        displayBoard();	 
+	        checkWinner('X');
+	        checkTie();
 	        //Send coordinates to the client
-	    	pwrite.println(Coordinates);	
+	    	pwrite.println(Coordinates);
+	        if(gameEnded) break;
+	        
         
         //Read client's moves
         int xClient,yClient;
@@ -100,11 +103,13 @@ public class Server {
 	 	    System.out.printf("Player's moves are: %s %s\n", clientCoordinates.charAt(0), clientCoordinates.charAt(1));
 	    	yClient = Character.getNumericValue(clientCoordinates.charAt(1));
 	    	placeSymbol(xClient, yClient, 'O');
-		    winner = checkWinner('O');
 		    displayBoard();
+		    checkWinner('O');
+		    checkTie();
+		    if (gameEnded) break;
 		}   
 		
-        if(winner) break;
+        if(gameEnded) break;
         }
 	scanner.close();
     if(tieGame)
@@ -113,7 +118,7 @@ public class Server {
     }
     else
     {
-        System.out.printf("Player % has won", playerWon);
+        System.out.printf("%s has won", playerWon);
     }	
     pwrite.close();
 	}
@@ -140,15 +145,14 @@ public class Server {
 		board[x][y] = symbol;
 	}
 	
-	public static boolean checkWinner(char symbol) {
-		boolean won = false;
+	public static void checkWinner(char symbol) {
 
 	    // Check rows for winning
 	    for(int i = 0; i < 3; ++i)
 	    {
 	        if(board[i][0] == symbol && board[i][1] == symbol &&
 	                board[i][2] == symbol)
-	            won = true;
+	            gameEnded = true;
 	    }
 
 	    // Check columns for winning
@@ -156,19 +160,19 @@ public class Server {
 	    {
 	        if(board[0][i] == symbol && board[1][i] == symbol &&
 	                board[2][i] == symbol)
-	            won = true;
+	        	gameEnded = true;
 	    }
 
 	    // Check diagonals for winning
 	    if(board[0][0] == symbol && board[1][1] == symbol &&
 	            board[2][2] == symbol)
-	        won = true;
+	    	gameEnded = true;
 
 	    if(board[0][2] == symbol && board[1][1] == symbol &&
 	            board[2][0] == symbol)
-	        won = true;
+	    	gameEnded = true;
 
-	   if(won)
+	   if(gameEnded)
 	    {
 	        if(symbol == 'X') {
 	        	playerWon = "Server";
@@ -178,7 +182,6 @@ public class Server {
 	        }
 	    }
 
-	    return won;		
 	}
 	
 	public static void checkTie()
@@ -192,7 +195,9 @@ public class Server {
 	        }
 	    }
 	    tieGame = (freePlaces == 0);
-
+	    if (gameEnded || tieGame) {
+		    gameEnded = true;
+	    }
 	}
 
 }
